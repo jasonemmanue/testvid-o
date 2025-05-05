@@ -1,0 +1,129 @@
+import java.awt.Dimension;
+import java.awt.EventQueue;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
+import javax.swing.ImageIcon;
+import javax.swing.JButton;
+import javax.swing.JFrame;
+import javax.swing.JLabel;
+import javax.swing.JOptionPane;
+
+import org.opencv.core.Core;
+import org.opencv.core.Mat;
+import org.opencv.core.MatOfByte;
+import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.videoio.VideoCapture;
+
+public class Mainfirstalanyaclient extends JFrame {
+	
+	//Camera screen
+	
+	private JLabel cameraScreen;
+	
+	private JButton btnCapture;
+	
+	private VideoCapture capture;
+	
+	private Mat image;
+	
+	private boolean clicked=false;
+	
+	
+	public Mainfirstalanyaclient() {
+		
+		//design ui
+		setLayout(null);
+		
+		cameraScreen = new JLabel();
+		cameraScreen.setBounds(0, 0, 640,480);
+		add(cameraScreen);
+		
+		btnCapture = new JButton("Capture");
+		btnCapture.setBounds(300, 480, 80,40);
+		add(btnCapture);
+		
+		btnCapture.addActionListener(new ActionListener() {
+
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				clicked = true;
+				
+			}
+			
+			
+		});
+		setSize(new Dimension(640,560));
+		setLocationRelativeTo(null);
+		setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+		setVisible(true);
+	}
+
+	//create camera 
+	
+	public void Startcamera() {
+		
+		capture = new VideoCapture(0);
+		image = new Mat();
+		byte[] imageData;
+		
+		ImageIcon icon;
+		while(true) {
+			//read iamge to matrix
+			capture.read(image);
+			
+			//convert matrix to byte
+			
+			final MatOfByte buf = new MatOfByte();
+			Imgcodecs.imencode(".jpg", image, buf);	
+			imageData = buf.toArray();
+			//add to Jlabel
+			icon = new ImageIcon(imageData);
+			cameraScreen.setIcon(icon);
+			//Capture and save file 
+			
+			if(clicked) {
+				//promt for enter image name
+				String name = JOptionPane.showInputDialog(this,"Enter image name");
+				
+				if (name==null) {
+					name = new SimpleDateFormat("yyyy-mm-dd-hh-mm-ss").format(new Date());
+				}
+				//write to file 
+				Imgcodecs.imwrite("images/"+name+".jpg",image);
+				
+				clicked = false;
+				
+			}
+		}
+		
+		
+	}
+	public static void main(String[] args) {
+		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
+		EventQueue.invokeLater(new Runnable(){
+			
+			@Override
+			public void run() {
+				Mainfirstalanyaclient camera = new Mainfirstalanyaclient();
+				//start camera in thread
+				new Thread(new Runnable() {
+
+					@Override
+					public void run() {
+						
+						camera.Startcamera();
+					}
+					
+				}).start();
+				
+			}
+	});
+		
+
+
+	}
+
+}
